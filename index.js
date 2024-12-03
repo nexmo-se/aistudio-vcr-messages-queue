@@ -1,5 +1,5 @@
 import express from "express";
-import { neru, Queue, Messages } from "neru-alpha";
+import { neru, Queue } from "neru-alpha";
 import axios from "axios";
 import { handleErrorResponse } from "./handleErrors.js";
 import { handleAuth } from "./handleAuth.js";
@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.NERU_APP_PORT || 3000;
 
 const DEFAULT_MPS = process.env.defaultMsgPerSecond || 1;
-const DEFAULT_MAX_INFLIGHT = process.env.defaultMaxInflight || 1;
+const DEFAULT_MAX_INFLIGHT = process.env.defaultMaxInflight || 30;
 const AI_AGENT_REGION = process.env.AI_AGENT_REGION;
 const AI_X_VGAI_KEY = process.env.AI_X_VGAI_KEY;
 
