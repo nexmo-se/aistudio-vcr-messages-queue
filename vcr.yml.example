@@ -1,0 +1,20 @@
+project:
+  name: REPLACE_WITH_YOUR_VCR_NAME
+instance:
+  name: REPLACE_WITH_YOUR_INSTANCE_NAME
+  runtime: nodejs18
+  region: REPLACE_WITH_YOUR_REGION
+  application-id: REPLACE_WITH_YOUR_VCR_APP_ID
+  entrypoint: ["npm", "start"]
+  environment:
+    - name: defaultMaxInflight
+      value: 30
+    - name: defaultMsgPerSecond
+      value: 1
+    - name: AI_X_VGAI_KEY
+      secret: AI_X_VGAI_KEY
+    - name: AI_AGENT_ID
+      secret: AI_AGENT_ID
+debug:
+  name: "debug"
+  entrypoint: ["npm", "run", "start-dev"]

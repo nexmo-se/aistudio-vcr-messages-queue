@@ -1,0 +1,26 @@
+{
+  "name": "aistudio-vcr-message-queue",
+  "version": "1.0.0",
+  "description": "Vonage Cloud Runtime Queue Messages API Whatsapp to Vonage AI Studio",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "prep-debug": "source .env.local",
+    "start-dev": "nodemon --inspect index.js",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kitt.phi@vonage.com",
+  "license": "ISC",
+  "dependencies": {
+    "@vonage/messages": "^1.18.1",
+    "@vonage/server-sdk": "^3.19.2",
+    "axios": "^1.7.8",
+    "express": "^4.21.1",
+    "neru-alpha": "^5.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": []
+}
