@@ -12,7 +12,7 @@ For example, if you were to make sequential POST requests to AI Studio `https://
 
 ## Initial Setup
 
-1. [Clone this Repository]()
+1. [Clone this Repository](https://github.com/nexmo-se/aistudio-vcr-messages-queue.git)
 2. [Install Vonage Cloud Runtime CLI](https://developer.vonage.com/en/vonage-cloud-runtime/getting-started/working-locally?source=vonage-cloud-runtime)
 3. Configure your CLI `vcr configure`.
 4. Upgrade your CLI `vcr upgrade`
