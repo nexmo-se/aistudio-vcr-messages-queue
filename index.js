@@ -1,5 +1,5 @@
 import express from "express";
-import { neru, Queue } from "neru-alpha";
+import { neru, Queue, State } from "neru-alpha";
 import axios from "axios";
 import { handleErrorResponse } from "./handleErrors.js";
 import { handleAuth } from "./handleAuth.js";
@@ -12,6 +12,13 @@ const DEFAULT_MPS = process.env.defaultMsgPerSecond || 1;
 const DEFAULT_MAX_INFLIGHT = process.env.defaultMaxInflight || 30;
 const AI_AGENT_REGION = process.env.AI_AGENT_REGION;
 const AI_X_VGAI_KEY = process.env.AI_X_VGAI_KEY;
+const WEBHOOK_STATUS_URL = process.env.WEBHOOK_STATUS_URL;
+
+if (!WEBHOOK_STATUS_URL) {
+  console.log("Missing WEBHOOK_STATUS_URL:", WEBHOOK_STATUS_URL);
+}
+
+const state = neru.getInstanceState();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -25,6 +32,42 @@ app.get("/_/metrics", async (req, res) => {
 
 app.get("/_/health", async (req, res) => {
   res.sendStatus(200);
+});
+
+// Handle webhooks/status with Axios POST to status_url
+app.post("/webhooks/status", async (req, res) => {
+  console.log("/webhooks/status req.body:", req.body);
+  const { to } = req.body;
+
+  if (!to) return res.status(500).send("Missing 'to' key in body.");
+
+  try {
+    // Retrieve the state for the given "to" key
+    const queueItem = await state.get(to);
+
+    if (!queueItem)
+      return res.status(404).send("No state found for the given 'to' key.");
+
+    let statusPayload = req.body;
+
+    // Update client_ref if it exists
+    if (queueItem.client_ref) {
+      statusPayload.client_ref = queueItem.client_ref;
+    } else {
+      console.log("No client_ref available in queueItem.");
+    }
+
+    // Make Axios POST request to WEBHOOK_STATUS_URL
+
+    if (!WEBHOOK_STATUS_URL)
+      return res.status(400).send("Missing WEBHOOK_STATUS_URL.");
+
+    await axios.post(WEBHOOK_STATUS_URL, statusPayload);
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    return handleErrorResponse(error, res, "Processing webhook status.");
+  }
 });
 
 // api to create a queue
@@ -61,28 +104,38 @@ app.post("/queues/create", handleAuth, async (req, res) => {
 
 // api to add an item to a queue
 // call this instead of messages api with the same payload but without required headers
+// Add item to a queue and store in state
 app.post("/queues/additem/:name", handleAuth, async (req, res) => {
   const { name } = req.params;
+  const { to, status_url } = req.body;
 
-  // check if queue name was provided
-  if (!name) return res.status(500).send("No name found.");
+  if (!name || !to || !status_url)
+    return res
+      .status(500)
+      .send("Missing queue name, 'to' or 'status_url' key.");
 
   try {
+    // Store request body in state with "to" as key
+    const queueItem = await state.set(to, req.body);
+    console.log("queueItem:", queueItem);
+
+    // Set an expiry time for the stored request
+    await state.expire(to, 7200); // 7200 seconds = 2 hours
+
     const session = neru.createSession();
     const queueApi = new Queue(session);
 
-    // create a new queue item with neru queue provider
+    // Enqueue the item
     await queueApi
       .enqueueSingle(name, {
         originalBody: req.body,
-        aiXVgaiKey: AI_X_VGAI_KEY,
+        aiXVgaiKey: process.env.AI_X_VGAI_KEY,
       })
       .execute();
 
-    // send http response
-    return res.status(200).json({ success: true });
-  } catch (e) {
-    return handleErrorResponse(e, res, "Adding queue item.");
+    res.status(200).json({ success: true });
+  } catch (error) {
+    return handleErrorResponse(error, res, "Adding queue item.");
   }
 });
 
@@ -148,8 +201,16 @@ app.post("/queues/:name", async (req, res) => {
   }
 });
 
+// For Internal testing
+app.post("/status", async (req, res) => {
+  console.log("/status req.body:", req.body);
+  res.status(200).json({ success: true });
+});
+
 app.listen(PORT, () => {
   console.log(
-    `Listening on ${process.env.NERU_APP_URL || "http://localhost:" + PORT} ...`
+    `Listening on ${
+      process.env.VCR_INSTANCE_PUBLIC_URL || "http://localhost:" + PORT
+    }`
   );
 });

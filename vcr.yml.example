@@ -11,6 +11,8 @@ instance:
       value: 30
     - name: defaultMsgPerSecond
       value: 1
+    - name: WEBHOOK_STATUS_URL
+      value: YOUR_WEBHOOK_STATUS_URL
     - name: AI_AGENT_REGION
       value: https://studio-api-us.ai.vonage.com/messaging/conversation
     - name: AI_X_VGAI_KEY

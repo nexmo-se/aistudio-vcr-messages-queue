@@ -1,13 +1,21 @@
 # Vonage AI Studio Vonage Cloud Runtime Queue WhatsApp Messages API
 
-The problem is that at this time Vonage AI Studio has a limit of 1 POST request per second. To remedy this, we intergrate Vonage Cloud Runtime (VCR) to queue the outbound Whatsapp Messages and continue to send them out at the same rate that satisfies AI Studio.
+We overcome 2 issues with this Proxy.
 
-For example, if you were to make sequential POST requests to AI Studio `https://studio-api-us.ai.vonage.com/messaging/conversation` at a faster rate than 1 request per second, you would receive the error below. This would not only fail to send your WhatsApp message, but would not offer you a retry mechanism. So by adding VCR into the picture, we now would allow a 3 Times Retry if it failes initially.
+1. The problem is that at this time Vonage AI Studio has a limit of 1 POST request per second. To remedy this, we intergrate Vonage Cloud Runtime (VCR) to queue the outbound Whatsapp Messages and continue to send them out at the same rate that satisfies AI Studio.
+
+   For example, if you were to make sequential POST requests to AI Studio `https://studio-api-us.ai.vonage.com/messaging/conversation` at a faster rate than 1 request per second, you would receive the error below. This would not only fail to send your WhatsApp message, but would not offer you a retry mechanism. So by adding VCR into the picture, we now would allow a 3 Times Retry if it failes initially.
 
 ```js
 {
     "message": ""Too Many Requests" Please reach studio team to increase rate limit at ai.support@vonage.com."
 }
+```
+
+2. The `client_ref` property in the payload is overwritten with "AI Studio". Do overcome this, we will use VCR State Provider to store/retrieve the value.
+
+```js
+client_ref: 'AI Studio',
 ```
 
 ## Initial Setup
@@ -86,6 +94,8 @@ Usage: delete a queue and all it's contents immediately.
 
 AUTH: For all requests, set Basic Auth. Username is apiKey and Password is its secret.
 
+Params: queue_name = YOUR_QUEUE_NAME_YOU_CREATED. For example name = testqueue01.
+
 Payload: none
 
 Response:
@@ -102,7 +112,7 @@ POST `VCR_URL/queues/additem/:queue_name`
 
 AUTH: For all requests, set Basic Auth. Username is apiKey and Password is its secret.
 
-Params: queue_name = YOUR_QUEUE_NAME_YOU_CREATED
+Params: queue_name = YOUR_QUEUE_NAME_YOU_CREATED. For example name = testqueue01.
 
 Example WhatsApp Body
 
@@ -134,6 +144,7 @@ Example WhatsApp Body
     "to": "TO_NUMBER",
     "agent_id": "AGENT_ID",
     "channel": "whatsapp",
+    "client_ref": "string",
     "status_url": "string",
     "session_parameters": [
     {
