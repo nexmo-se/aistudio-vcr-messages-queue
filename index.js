@@ -36,7 +36,7 @@ app.get("/_/health", async (req, res) => {
 
 // Handle webhooks/status with Axios POST to status_url
 app.post("/webhooks/status", async (req, res) => {
-  console.log("/webhooks/status req.body:", req.body);
+  console.log("/webhooks/status:", req.body);
   const { to } = req.body;
 
   if (!to) return res.status(500).send("Missing 'to' key in body.");
@@ -62,10 +62,12 @@ app.post("/webhooks/status", async (req, res) => {
     if (!WEBHOOK_STATUS_URL)
       return res.status(400).send("Missing WEBHOOK_STATUS_URL.");
 
+    console.log("Sending payload to WEBHOOK_STATUS_URL:", statusPayload);
     await axios.post(WEBHOOK_STATUS_URL, statusPayload);
 
     res.status(200).json({ success: true });
   } catch (error) {
+    console.error("Error occurred while posting to WEBHOOK_STATUS_URL:", error);
     return handleErrorResponse(error, res, "Processing webhook status.");
   }
 });
@@ -203,8 +205,14 @@ app.post("/queues/:name", async (req, res) => {
 
 // For Internal testing
 app.post("/status", async (req, res) => {
-  console.log("/status req.body:", req.body);
+  console.log("/status:", req.body);
   res.status(200).json({ success: true });
+});
+
+// global error-handling middleware to log unhandled errors.
+app.use((err, req, res, next) => {
+  console.error("Global error handler:", err);
+  res.status(500).json({ success: false, error: "Internal Server Error" });
 });
 
 app.listen(PORT, () => {

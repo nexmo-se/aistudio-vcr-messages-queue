@@ -1,7 +1,7 @@
 export function handleErrorResponse(e, res, errorHint) {
-  let message = `Error occured${
+  const errorMessage = `Error occurred${
     errorHint ? " (" + errorHint + ")" : ""
-  }. (${e}) / Details: ${e?.response?.data?.error}`;
-  console.error(message);
-  return res.status(500).json({ success: false, error: message });
+  }`;
+  console.error(errorMessage, e);
+  return res.status(500).json({ success: false, error: errorMessage });
 }
