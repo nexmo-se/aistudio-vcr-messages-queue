@@ -157,29 +157,9 @@ Example WhatsApp Body
 
 ### Test the /status Route
 
-To verify the payload and ensure the correct `client_ref` is applied, you can use the `/status` route for internal testing.
+To verify the payload and ensure the correct `client_ref` is applied, you can use the `/status` route for internal testing by updating the `WEBHOOK_STATUS_URL` value with `VCR_DEBUG_URL/status` within the `vcr.yml` file.
 
 POST `VCR_URL/status`
-
-AUTH: No authentication required.
-
-Body:
-
-```js
-{
-    "to": "TO_NUMBER",
-    "status": "delivered",
-    "client_ref": "YOUR_CLIENT_REF"
-}
-```
-
-Response:
-
-```js
-{
-    "success": true
-}
-```
 
 This route is useful for validating that the `client_ref` is correctly retrieved and processed.
 
