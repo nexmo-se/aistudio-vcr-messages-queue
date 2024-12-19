@@ -67,7 +67,7 @@ app.post("/webhooks/status", async (req, res) => {
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error("Error occurred while posting to WEBHOOK_STATUS_URL:", error);
+    // console.error("Error occurred while posting to WEBHOOK_STATUS_URL:", error);
     return handleErrorResponse(error, res, "Processing webhook status.");
   }
 });
