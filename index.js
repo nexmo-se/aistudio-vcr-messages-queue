@@ -23,6 +23,9 @@ const state = neru.getInstanceState();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Utility function to sanitize keys
+const sanitizeKey = (key) => key.replace(/\+/g, "");
+
 app.get("/", (req, res) => {
   res.send("App is running.");
 });
@@ -43,7 +46,8 @@ app.post("/webhooks/status", async (req, res) => {
 
   try {
     // Retrieve the state for the given "to" key
-    const queueItem = await state.get(to);
+    const sanitizedTo = sanitizeKey(to); // Sanitize the "to" key
+    const queueItem = await state.get(sanitizedTo);
 
     if (!queueItem)
       return res.status(404).send("No state found for the given 'to' key.");
@@ -58,7 +62,6 @@ app.post("/webhooks/status", async (req, res) => {
     }
 
     // Make Axios POST request to WEBHOOK_STATUS_URL
-
     if (!WEBHOOK_STATUS_URL)
       return res.status(400).send("Missing WEBHOOK_STATUS_URL.");
 
@@ -118,11 +121,12 @@ app.post("/queues/additem/:name", handleAuth, async (req, res) => {
 
   try {
     // Store request body in state with "to" as key
-    const queueItem = await state.set(to, req.body);
+    const sanitizedTo = sanitizeKey(to); // Sanitize the "to" key
+    const queueItem = await state.set(sanitizedTo, req.body);
     console.log("queueItem:", queueItem);
 
     // Set an expiry time for the stored request
-    await state.expire(to, 7200); // 7200 seconds = 2 hours
+    await state.expire(sanitizedTo, 7200); // 7200 seconds = 2 hours
 
     const session = neru.createSession();
     const queueApi = new Queue(session);
