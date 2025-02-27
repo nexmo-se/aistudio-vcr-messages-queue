@@ -1,5 +1,5 @@
 import express from "express";
-import { neru, Queue, State } from "neru-alpha";
+import { neru, Queue } from "neru-alpha";
 import axios from "axios";
 import { handleErrorResponse } from "./handleErrors.js";
 import { handleAuth } from "./handleAuth.js";
@@ -40,7 +40,7 @@ app.get("/_/health", async (req, res) => {
 // Handle webhooks/status with Axios POST to status_url
 app.post("/webhooks/status", async (req, res) => {
   console.log("/webhooks/status:", req.body);
-  const { to } = req.body;
+  const { to, replyText } = req.body;
 
   if (!to) return res.status(500).send("Missing 'to' key in body.");
 
@@ -67,6 +67,18 @@ app.post("/webhooks/status", async (req, res) => {
 
     console.log("Sending payload to WEBHOOK_STATUS_URL:", statusPayload);
     await axios.post(WEBHOOK_STATUS_URL, statusPayload);
+
+    // Forward reply text to the specified URL
+    if (replyText) {
+      const forwardPayload = {
+        to,
+        replyText,
+      };
+      const forwardUrl =
+        "https://webhook.site/97ddfd52-180f-4efb-a9b0-477daf16bcda";
+      console.log("Forwarding reply text to:", forwardUrl);
+      await axios.post(forwardUrl, forwardPayload);
+    }
 
     res.status(200).json({ success: true });
   } catch (error) {

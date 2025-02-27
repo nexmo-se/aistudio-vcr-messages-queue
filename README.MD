@@ -163,6 +163,23 @@ POST `VCR_URL/status`
 
 This route is useful for validating that the `client_ref` is correctly retrieved and processed.
 
+### Forwarding Reply Text to Marketo
+
+When a WhatsApp message with buttons is sent, the reply text can be forwarded to a specified URL to trigger a flow in Marketo.
+
+The `/webhooks/status` route will handle this functionality. If a reply text is received, it will be forwarded along with the `to` key to the following URL:
+
+`https://webhook.site/97ddfd52-180f-4efb-a9b0-477daf16bcda`
+
+Example payload forwarded:
+
+```js
+{
+    "to": "TO_NUMBER",
+    "replyText": "REPLY_TEXT"
+}
+```
+
 ## Credits
 
 Thanks to Toni Kusham for sharing VCR Queue sample code [See Here](https://github.com/klapperkopp/vcr-simple-queue-demo/tree/add-optional-filters-and-checks)
