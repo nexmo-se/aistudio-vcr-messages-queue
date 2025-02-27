@@ -13,9 +13,14 @@ const DEFAULT_MAX_INFLIGHT = process.env.defaultMaxInflight || 30;
 const AI_AGENT_REGION = process.env.AI_AGENT_REGION;
 const AI_X_VGAI_KEY = process.env.AI_X_VGAI_KEY;
 const WEBHOOK_STATUS_URL = process.env.WEBHOOK_STATUS_URL;
+const FORWARD_URL = process.env.FORWARD_URL;
 
 if (!WEBHOOK_STATUS_URL) {
   console.log("Missing WEBHOOK_STATUS_URL:", WEBHOOK_STATUS_URL);
+}
+
+if (!FORWARD_URL) {
+  console.log("Missing FORWARD_URL:", FORWARD_URL);
 }
 
 const state = neru.getInstanceState();
@@ -70,14 +75,16 @@ app.post("/webhooks/status", async (req, res) => {
 
     // Forward reply text to the specified URL
     if (replyText) {
+      if (!FORWARD_URL) {
+        console.log("FORWARD_URL is not set.");
+        return res.status(400).send(`Missing FORWARD_URL: ${FORWARD_URL}`);
+      }
       const forwardPayload = {
         to,
         replyText,
       };
-      const forwardUrl =
-        "https://webhook.site/97ddfd52-180f-4efb-a9b0-477daf16bcda";
-      console.log("Forwarding reply text to:", forwardUrl);
-      await axios.post(forwardUrl, forwardPayload);
+      console.log("Forwarding reply text to:", FORWARD_URL);
+      await axios.post(FORWARD_URL, forwardPayload);
     }
 
     res.status(200).json({ success: true });

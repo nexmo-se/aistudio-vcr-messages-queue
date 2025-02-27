@@ -167,9 +167,7 @@ This route is useful for validating that the `client_ref` is correctly retrieved
 
 When a WhatsApp message with buttons is sent, the reply text can be forwarded to a specified URL to trigger a flow in Marketo.
 
-The `/webhooks/status` route will handle this functionality. If a reply text is received, it will be forwarded along with the `to` key to the following URL:
-
-`https://webhook.site/97ddfd52-180f-4efb-a9b0-477daf16bcda`
+The `/webhooks/status` route will handle this functionality. If a reply text is received, it will be forwarded along with the `to` key to the forward URL you specified in the `vcr.yml`.
 
 Example payload forwarded:
 
