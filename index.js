@@ -42,10 +42,16 @@ app.get("/_/health", async (req, res) => {
   res.sendStatus(200);
 });
 
+// testing
+app.post("/webhooks/inbound", async (req, res) => {
+  console.log("/webhooks/inbound:", req.body);
+  res.status(200).json({ success: true });
+});
+
 // Handle webhooks/status with Axios POST to status_url
 app.post("/webhooks/status", async (req, res) => {
   console.log("/webhooks/status:", req.body);
-  const { to, replyText } = req.body;
+  const { to } = req.body;
 
   if (!to) return res.status(500).send("Missing 'to' key in body.");
 
@@ -66,31 +72,23 @@ app.post("/webhooks/status", async (req, res) => {
       console.log("No client_ref available in queueItem.");
     }
 
-    // Make Axios POST request to WEBHOOK_STATUS_URL
     if (!WEBHOOK_STATUS_URL)
       return res.status(400).send("Missing WEBHOOK_STATUS_URL.");
 
     console.log("Sending payload to WEBHOOK_STATUS_URL:", statusPayload);
     await axios.post(WEBHOOK_STATUS_URL, statusPayload);
 
-    // Forward reply text to the specified URL
-    if (replyText) {
-      if (!FORWARD_URL) {
-        console.log("FORWARD_URL is not set.");
-        return res.status(400).send(`Missing FORWARD_URL: ${FORWARD_URL}`);
-      }
-      const forwardPayload = {
-        to,
-        replyText,
-      };
-      console.log("Forwarding reply text to:", FORWARD_URL);
-      await axios.post(FORWARD_URL, forwardPayload);
-    }
-
     res.status(200).json({ success: true });
   } catch (error) {
-    // console.error("Error occurred while posting to WEBHOOK_STATUS_URL:", error);
-    return handleErrorResponse(error, res, "Processing webhook status.");
+    console.log(
+      "ERROR webhooks/status:",
+      error.response ? error.response.data : error.message
+    );
+    res.status(500).json({
+      success: false,
+      error: "Error webhooks/status",
+      details: error.response ? error.response.data : error.message,
+    });
   }
 });
 
@@ -133,10 +131,10 @@ app.post("/queues/additem/:name", handleAuth, async (req, res) => {
   const { name } = req.params;
   const { to, status_url } = req.body;
 
-  if (!name || !to || !status_url)
-    return res
-      .status(500)
-      .send("Missing queue name, 'to' or 'status_url' key.");
+  if (!name) return res.status(500).send("Missing queue name: " + name);
+  if (!to) return res.status(500).send("Missing 'to' key in body: " + to);
+  if (!status_url)
+    return res.status(500).send("Missing 'status_url': " + status_url);
 
   try {
     // Store request body in state with "to" as key
@@ -160,7 +158,12 @@ app.post("/queues/additem/:name", handleAuth, async (req, res) => {
 
     res.status(200).json({ success: true });
   } catch (error) {
-    return handleErrorResponse(error, res, "Adding queue item.");
+    res.status(500).json({
+      success: false,
+      error: "Error adding item to queue",
+      details: error.response ? error.response.data : error.message,
+    });
+    console.log(error.response ? error.response.data : error.message);
   }
 });
 
@@ -229,6 +232,12 @@ app.post("/queues/:name", async (req, res) => {
 // For Internal testing
 app.post("/status", async (req, res) => {
   console.log("/status:", req.body);
+  res.status(200).json({ success: true });
+});
+
+// For Internal testing
+app.post("/forward-url", async (req, res) => {
+  console.log("/forward-url:", req.body);
   res.status(200).json({ success: true });
 });
 

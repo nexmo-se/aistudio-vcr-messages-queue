@@ -40,10 +40,12 @@ client_ref: 'AI Studio',
 
 To apply:
 
-- Run `vcr secret add --name AI_X_VGAI_KEY --value "YOUR_AI_X_VGAI_KEY"`
-- Run `vcr secret add --name AI_AGENT_ID --value "YOUR_AI_AGENT_ID"`
-- Run `export AI_X_VGAI_KEY="YOUR_AI_X_VGAI_KEY"`
-- Run `export AI_AGENT_ID="YOUR_AI_AGENT_ID"`
+```js
+vcr secret add --name AI_X_VGAI_KEY --value "YOUR_AI_X_VGAI_KEY"
+vcr secret add --name AI_AGENT_ID --value "YOUR_AI_AGENT_ID"
+export AI_X_VGAI_KEY="YOUR_AI_X_VGAI_KEY"
+export AI_AGENT_ID="YOUR_AI_AGENT_ID"
+```
 
 ## VCR Debug vs VCR Deploy
 
@@ -53,9 +55,13 @@ To deploy the application permanently for use run `vcr deploy`. Copy URL and use
 
 - You will have to go to VCR at Vonage Dashboard and view logs for the Server Instance.
 
-Otherwise, to just test it, run in Debug mode run `vcr debug`. Copy URL and use it in your POST request.
+Otherwise, to just test it, run in Debug mode run `vcr debug`. Copy URL and use it in both your POST requests to (1) Add a WhatsApp Message to VCR Queue and (2) edit the `status_url: VCR_URL/webhooks/status`
 
-- You can view logs in the terminal.
+### Route /webhooks/status
+
+Is triggered since we assigned the `status_url: VCR_URL/webhooks/status` in the POST body of WhatsApp message when adding it the queue `VCR_URL/queues/additem/:queue_name`
+
+Here the wanted `client_ref` is retrieved and replaces the harcoded `AI STUDIO`.
 
 ## Running the Demo
 
@@ -86,7 +92,7 @@ Response:
 }
 ```
 
-### Just FYI, you can Delete the queue (queue_name) if you want to.
+### Just FYI, you can Delete the queue (queue_name) if you want to
 
 DELETE `VCR_URL/queues/:queue_name`
 
@@ -145,25 +151,19 @@ Example WhatsApp Body
     "agent_id": "AGENT_ID",
     "channel": "whatsapp",
     "client_ref": "string",
-    "status_url": "string",
-    "session_parameters": [
-    {
-      "name": "string",
-      "value": "string"
-    }
-  ]
+    "status_url": "VCR_URL/webhooks/status"
 }
 ```
 
 ### Test the /status Route
 
-To verify the payload and ensure the correct `client_ref` is applied, you can use the `/status` route for internal testing by updating the `WEBHOOK_STATUS_URL` value with `VCR_DEBUG_URL/status` within the `vcr.yml` file.
+Testing the App locally via `vcr debug -y`
 
-POST `VCR_URL/status`
+For testing purposes, you can ensure the correct `client_ref` is applied, by setting the `WEBHOOK_STATUS_URL` value with `VCR_DEBUG_URL/status` within the `vcr.yml` file.
 
-This route is useful for validating that the `client_ref` is correctly retrieved and processed.
+The POST `VCR_URL/status` route is useful for validating that the `client_ref` is correctly retrieved and sent to the `/VCR_URL/status` route. You can replace this with your own URL.
 
-### Forwarding Reply Text to Marketo
+<!-- ### Forwarding Reply Text to Marketo
 
 When a WhatsApp message with buttons is sent, the reply text can be forwarded to a specified URL to trigger a flow in Marketo.
 
@@ -176,7 +176,7 @@ Example payload forwarded:
     "to": "TO_NUMBER",
     "replyText": "REPLY_TEXT"
 }
-```
+``` -->
 
 ## Credits
 
