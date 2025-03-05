@@ -42,13 +42,43 @@ app.get("/_/health", async (req, res) => {
   res.sendStatus(200);
 });
 
-// testing
+// Is triggered via Studio AI Vonage Application Inbound URL. Pleae set in API Developer Dashboard.
+// Set in VCR_URL/webhooks/inbound
 app.post("/webhooks/inbound", async (req, res) => {
   console.log("/webhooks/inbound:", req.body);
+
+  // Forward the request to the FORWARD_URL
+  if (FORWARD_URL) {
+    try {
+      await axios.post(FORWARD_URL, req.body);
+    } catch (error) {
+      console.log(
+        "ERROR /webhooks/inbound:",
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+
+  // Send a 200 OK response and req.body
+  res.status(200).json({ success: true, body: req.body });
+});
+
+// For Internal testing
+app.post("/status", async (req, res) => {
+  console.log("/status:", req.body);
   res.status(200).json({ success: true });
 });
 
-// Handle webhooks/status with Axios POST to status_url
+// For Internal testing
+app.post("/forward-url", async (req, res) => {
+  console.log("/forward-url:", req.body);
+
+  // respond with 200 OK and req.body
+  res.status(200).json({ success: true, body: req.body });
+});
+
+// Is defined in Reqeust body to /queues/additem/:name; VCR_URL/webhooks/status
+// For testing purposes here, we send it to the VCR_URL/status for logging.
 app.post("/webhooks/status", async (req, res) => {
   console.log("/webhooks/status:", req.body);
   const { to } = req.body;
@@ -227,18 +257,6 @@ app.post("/queues/:name", async (req, res) => {
   } catch (e) {
     return handleErrorResponse(e, res, "Executing Queue Item");
   }
-});
-
-// For Internal testing
-app.post("/status", async (req, res) => {
-  console.log("/status:", req.body);
-  res.status(200).json({ success: true });
-});
-
-// For Internal testing
-app.post("/forward-url", async (req, res) => {
-  console.log("/forward-url:", req.body);
-  res.status(200).json({ success: true });
 });
 
 // global error-handling middleware to log unhandled errors.
