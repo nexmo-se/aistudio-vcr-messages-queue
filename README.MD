@@ -63,6 +63,8 @@ We need to set the environment variables within the `vcr.yml` file. Please copy 
       value: "VCR_URL/status"
     - name: FORWARD_URL
       value: "VCR_URL/forward-url"
+   - name: STUDIO_AI_INBOUND_URL
+      value: https://studio-api-us.ai.vonage.com/integrations/messaging-api/webhooks/inbound?agent_id=YOUR_STUDIO_AI_AGENT_ID
     - name: AI_AGENT_REGION
       value: https://studio-api-us.ai.vonage.com/messaging/conversation
     - name: AI_X_VGAI_KEY
@@ -309,6 +311,30 @@ We are able to capture the button text and payload.
   },
   profile: { name: 'Kitt' }
 }
+```
+
+We successfully forward the payload to the original Studio AI Inbound URL, see responses logged
+
+```js
+FORWARD_URL Response: {
+  success: true,
+  body: {
+    to: '12013779099',
+    from: '15754940000',
+    channel: 'whatsapp',
+    message_uuid: 'abc-e4b1-4255-85a7-5f17160bb459',
+    timestamp: '2025-03-11T23:14:58Z',
+    message_type: 'button',
+    button: { text: 'Stop promotions', payload: 'Stop promotions' },
+    context_status: 'available',
+    context: {
+      message_from: '12013779099',
+      message_uuid: 'abc-7e38-430b-a1a9-3f91f17f0b73'
+    },
+    profile: { name: 'Kitt' }
+  }
+}
+STUDIO_AI_INBOUND_URL Response: { status: 201, statusText: 'Created', data: '' }
 ```
 
 ## Credits

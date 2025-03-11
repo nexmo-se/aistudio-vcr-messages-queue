@@ -14,6 +14,7 @@ const AI_AGENT_REGION = process.env.AI_AGENT_REGION;
 const AI_X_VGAI_KEY = process.env.AI_X_VGAI_KEY;
 const WEBHOOK_STATUS_URL = process.env.WEBHOOK_STATUS_URL;
 const FORWARD_URL = process.env.FORWARD_URL;
+const STUDIO_AI_INBOUND_URL = process.env.STUDIO_AI_INBOUND_URL;
 
 if (!WEBHOOK_STATUS_URL) {
   console.log("Missing WEBHOOK_STATUS_URL:", WEBHOOK_STATUS_URL);
@@ -21,6 +22,10 @@ if (!WEBHOOK_STATUS_URL) {
 
 if (!FORWARD_URL) {
   console.log("Missing FORWARD_URL:", FORWARD_URL);
+}
+
+if (!STUDIO_AI_INBOUND_URL) {
+  console.log("Missing STUDIO_AI_INBOUND_URL:", STUDIO_AI_INBOUND_URL);
 }
 
 const state = neru.getInstanceState();
@@ -47,20 +52,55 @@ app.get("/_/health", async (req, res) => {
 app.post("/webhooks/inbound", async (req, res) => {
   console.log("/webhooks/inbound:", req.body);
 
-  // Forward the request to the FORWARD_URL
-  if (FORWARD_URL) {
+  // Forward the request to the FORWARD_URL & STUDIO_AI_INBOUND_URL
+  if (FORWARD_URL && STUDIO_AI_INBOUND_URL) {
     try {
-      await axios.post(FORWARD_URL, req.body);
-    } catch (error) {
-      console.log(
-        "ERROR /webhooks/inbound:",
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
+      // Forward to FORWARD_URL
+      let forwardUrlResp = await axios({
+        method: req.method,
+        url: FORWARD_URL,
+        headers: {
+          ...req.headers,
+          host: new URL(FORWARD_URL).host,
+        },
+        data: req.body,
+      });
 
-  // Send a 200 OK response and req.body
-  res.status(200).json({ success: true, body: req.body });
+      // Forward to STUDIO_AI_INBOUND_URL
+      let studioApiInboundResp = await axios({
+        method: req.method,
+        url: STUDIO_AI_INBOUND_URL,
+        headers: {
+          ...req.headers,
+          host: new URL(STUDIO_AI_INBOUND_URL).host,
+        },
+        data: req.body,
+      });
+
+      console.log("FORWARD_URL Response:", forwardUrlResp.data);
+
+      let studioAiResponse = {
+        status: studioApiInboundResp.status,
+        statusText: studioApiInboundResp.statusText,
+        data: studioApiInboundResp.data,
+      };
+
+      console.log("STUDIO_AI_INBOUND_URL Response:", studioAiResponse);
+      return res.status(200).json({
+        forwardUrlResponse: forwardUrlResp.data,
+        studioApiInboundResponse: studioAiResponse,
+      });
+    } catch (error) {
+      let errorResponse = error.response ? error.response.data : error.message;
+      console.log("ERROR /webhooks/inbound:", errorResponse);
+
+      return res.status(500).json(errorResponse);
+    }
+  } else {
+    return res
+      .status(500)
+      .json({ error: "FORWARD_URL or STUDIO_API_INBOUND_URL is not defined" });
+  }
 });
 
 // For Internal testing
