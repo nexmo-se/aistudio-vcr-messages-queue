@@ -50,17 +50,26 @@ app.post("/webhooks/inbound", async (req, res) => {
   // Forward the request to the FORWARD_URL
   if (FORWARD_URL) {
     try {
-      await axios.post(FORWARD_URL, req.body);
-    } catch (error) {
-      console.log(
-        "ERROR /webhooks/inbound:",
-        error.response ? error.response.data : error.message
-      );
-    }
-  }
+      let forwardUrlResp = await axios({
+        method: req.method,
+        url: FORWARD_URL,
+        headers: {
+          ...req.headers,
+          host: new URL(FORWARD_URL).host,
+        },
+        data: req.body,
+      });
 
-  // Send a 200 OK response and req.body
-  res.status(200).json({ success: true, body: req.body });
+      return res.status(forwardUrlResp.status).json(forwardUrlResp.data);
+    } catch (error) {
+      let errorResponse = error.response ? error.response.data : error.message;
+      console.log("ERROR /webhooks/inbound:", errorResponse);
+
+      return res.status(500).json(errorResponse);
+    }
+  } else {
+    return res.status(500).json({ error: "FORWARD_URL is not defined" });
+  }
 });
 
 // For Internal testing
